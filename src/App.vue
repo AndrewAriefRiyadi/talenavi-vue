@@ -106,7 +106,7 @@ onMounted(fetchTasks)
 
 <template>
   <div class="min-h-screen flex flex-col pt-16  bg-linear-to-r from-gray-900 to-gray-800 w-screen text-white">
-    <div class=" mx-10">
+    <div class=" mx-10 mb-12">
 
       <div class="w-full flex gap-4 border-b  border-b-white/10 items-center ">
         <button :class="activeComponent === 'TaskTable' ? 'border-b' : 'border-0'"
