@@ -53,7 +53,6 @@ const onDragStart = (task) => {
 
 const onDrop = (newStatus) => {
     if (!draggedTask.value) return
-    console.log(draggedTask.value)
 
     emit("update-status", draggedTask.value.title, newStatus)
     draggedTask.value = null
