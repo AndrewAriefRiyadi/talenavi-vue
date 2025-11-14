@@ -1,85 +1,13 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 
-const tasks = ref([])
-const developers = ref([])
-const sortRules = ref([])
 const editingCell = ref({ rowIndex: null, key: null })
 
 const props = defineProps({
-    search: String,
-    dev: String
+    tasks: Array,
 })
 
-const emit = defineEmits(['developers-ready'])
-
-async function fetchTasks() {
-    const res = await fetch('https://mocki.io/v1/f7861fc0-9071-4034-afed-777f3b590c3c')
-    const data = await res.json()
-
-    tasks.value = data.data
-
-    developers.value = [
-        ...new Set(
-            data.data
-                .flatMap(t => t.developer.split(','))
-                .map(name => name.trim())
-        )
-    ]
-
-    emit('developers-ready', developers.value)
-}
-
-const filteredTasks = computed(() => {
-    let filtered = tasks.value.filter(task => {
-        const matchSearch =
-            !props.search ||
-            task.title.toLowerCase().includes(props.search.toLowerCase())
-
-        const matchDev =
-            !props.dev ||
-            props.dev === 'Everyone' ||
-            task.developer
-                .split(',')
-                .map(d => d.trim().toLowerCase())
-                .includes(props.dev.toLowerCase())
-
-        return matchSearch && matchDev
-    })
-
-    if (sortRules.value.length > 0) {
-        filtered = [...filtered].sort((a, b) => {
-            for (const rule of sortRules.value) {
-                const { key, order } = rule
-                const aValue = (a[key] || '').toString().toLowerCase()
-                const bValue = (b[key] || '').toString().toLowerCase()
-
-                if (aValue < bValue) return order === 'asc' ? -1 : 1
-                if (aValue > bValue) return order === 'asc' ? 1 : -1
-            }
-            return 0
-        })
-    }
-
-    return filtered
-})
-
-function applySort(rules) {
-    sortRules.value = rules
-}
-
-function addNewTask() {
-    tasks.value.unshift({
-        title: 'New Task',
-        developer: '',
-        status: 'Ready to start',
-        priority: 'Low',
-        type: 'Other',
-        date: new Date().toISOString().split('T')[0],
-        'Estimated SP': 0,
-        'Actual SP': 0
-    })
-}
+const tasks = computed(() => props.tasks || [])
 
 function formatDate(dateString) {
     const date = new Date(dateString)
@@ -123,13 +51,12 @@ const statusColors = ref({
 })
 
 
-
 function getPercentages(key) {
-    const total = filteredTasks.value.length
+    const total = tasks.value.length
     if (total === 0) return {}
 
     const counts = {}
-    for (const t of filteredTasks.value) {
+    for (const t of tasks.value) {
         const val = t[key] || 'Unknown'
         counts[val] = (counts[val] || 0) + 1
     }
@@ -141,13 +68,6 @@ function getPercentages(key) {
     return result
 }
 
-defineExpose({
-    addNewTask,
-    developers,
-    applySort
-})
-
-onMounted(fetchTasks)
 </script>
 
 <template>
@@ -170,7 +90,7 @@ onMounted(fetchTasks)
             </thead>
 
             <tbody>
-                <tr v-for="(task, index) in filteredTasks" :key="index" class="hover:bg-gray-900 transition">
+                <tr v-for="(task, index) in tasks" :key="index" class="hover:bg-gray-900 transition">
                     <td class="px-3 py-2 border text-center">
                         <input type="checkbox" class="w-4 h-4 border rounded" />
                     </td>
@@ -259,10 +179,10 @@ onMounted(fetchTasks)
                     </td>
                 </tr>
 
-                <tr v-if="filteredTasks.length === 0">
+                <tr v-if="tasks.length === 0">
                     <td colspan="9" class="text-center py-3 text-gray-400">No tasks found</td>
                 </tr>
-                <tr v-if="filteredTasks.length != 0">
+                <tr v-if="tasks.length != 0">
                     <td class="px-3 py-2 border cursor-pointer"></td>
                     <td class="px-3 py-2 border cursor-pointer"></td>
                     <td class="px-3 py-2 border cursor-pointer"></td>
